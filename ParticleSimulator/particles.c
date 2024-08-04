@@ -109,7 +109,7 @@ void UpdateStone(int y, int x)
 
 
 
-void UpdateFire(int y, int x)
+void UpdateSmoke(int y, int x)
 {
     if (array[y][x].updated_this_frame)
         return;
@@ -118,31 +118,31 @@ void UpdateFire(int y, int x)
 
     if (InBounds(y - 1, x) && IsEmpty(y - 1, x))
     {
-        array[y - 1][x].id = mat_id_fire;
+        array[y - 1][x].id = mat_id_smoke;
         array[y][x].id = mat_id_empty;
         array[y - 1][x].updated_this_frame = true;
     }
     else if (InBounds(y - 1, x + dir) && IsEmpty(y - 1, x + dir))
     {
-        array[y - 1][x + dir].id = mat_id_fire;
+        array[y - 1][x + dir].id = mat_id_smoke;
         array[y][x].id = mat_id_empty;
         array[y - 1][x + dir].updated_this_frame = true;
     }
     else if (InBounds(y - 1, x - dir) && IsEmpty(y - 1, x - dir))
     {
-        array[y - 1][x - dir].id = mat_id_fire;
+        array[y - 1][x - dir].id = mat_id_smoke;
         array[y][x].id = mat_id_empty;
         array[y - 1][x - dir].updated_this_frame = true;
     }
     else if (InBounds(y, x + dir) && IsEmpty(y, x + dir))
     {
-        array[y][x + dir].id = mat_id_fire;
+        array[y][x + dir].id = mat_id_smoke;
         array[y][x].id = mat_id_empty;
         array[y][x + dir].updated_this_frame = true;
     }
     else if (InBounds(y, x - dir) && IsEmpty(y, x - dir))
     {
-        array[y][x - dir].id = mat_id_fire;
+        array[y][x - dir].id = mat_id_smoke;
         array[y][x].id = mat_id_empty;
         array[y][x - dir].updated_this_frame = true;
     }
