@@ -4,15 +4,11 @@
 
 t_particle **array;
 
-
-typedef struct s_player
+int	ft_convert(int i, int new_min, int new_max, int old_min, int old_max)
 {
-    int p_width;
-    int p_height;
-    int x;
-    int y;
-    short id;
-} t_player;
+	return ((new_max - new_min) *(i - old_min) / (old_max - old_min) + new_min);
+}
+
 
 t_player p1;
 
@@ -23,20 +19,60 @@ void    InitPlayer()
     p1.x = width / 2;
     p1.y = height / 2;
     p1.id = mat_id_p1;
+    p1.vel_y = GRAVITY;
+    p1.vel_x = 0;
     array[p1.y][p1.x].id = mat_id_p1;
 }
 
-void    PlayerMove()
+bool IsOnGround()
 {
-    if (IsKeyPressed(KEY_D))
-        p1.x++;
-    else if (IsKeyPressed(KEY_A))
-        p1.x--;
-    else if (IsKeyPressed(KEY_S))
-        p1.y++;
-    else if (IsKeyPressed(KEY_W))
-        p1.y--;
-    DrawRectangle(p1.x, p1.y, p1.p_width, p1.p_height, RAYWHITE);
+    return !InBounds(p1.y + 1, p1.x) || !IsEmpty(p1.y + 1, p1.x);
+}
+
+void PlayerMove()
+{
+
+    if (IsKeyDown(KEY_D))
+        p1.vel_x += ACCELERATION;
+    if (IsKeyDown(KEY_A))
+        p1.vel_x -= ACCELERATION;
+    if (!IsKeyDown(KEY_D) && !IsKeyDown(KEY_A))
+        p1.vel_x *= FRICTION;
+
+    if (p1.vel_x > 5) p1.vel_x = MAX_VEL;
+    if (p1.vel_x < -5) p1.vel_x = -MAX_VEL;
+
+    if (IsKeyPressed(KEY_W) && IsOnGround())
+        p1.vel_y += JUMP;
+
+    if (!IsOnGround())
+        p1.vel_y +=GRAVITY;
+    else if (!IsKeyPressed(KEY_W))
+        p1.vel_y = 0;
+
+    float new_x = p1.x + p1.vel_x;
+    float new_y = p1.y + p1.vel_y;
+
+    // Check boundaries horizontal
+    if (!InBounds(new_y, new_x) || !IsEmpty(new_y, new_x) && !IsOnGround())
+    {
+        new_x = p1.x;
+        p1.vel_x = 0;
+    }
+    // Check boundaries vertical
+    if (!InBounds(new_y, new_x) || !IsEmpty(new_y, new_x))
+    {
+        new_y = p1.y + p1.vel_y / 2;
+        p1.vel_y = 0;
+    }
+    //UpdatePosition
+    if (InBounds(new_y, new_x) && IsEmpty(new_y, new_x))
+    {
+        array[p1.y][p1.x].id = mat_id_empty;
+        p1.x = new_x;
+        p1.y = new_y;
+        array[p1.y][p1.x].id = mat_id_p1;
+    }
 }
 
 int main()
@@ -61,15 +97,15 @@ int main()
     }
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "FallingAutomata");
-    SetTargetFPS(60);
+    InitPlayer();
+    SetTargetFPS(30);
 
     while (!WindowShouldClose())
     {
         ResetUpdateFlags(array);
         InitBrush(&brush, array);
-        InitPlayer();
         BeginDrawing();
-        DrawRectangle(p1.x, p1.y, p1.p_width, p1.p_height, RAYWHITE);
+        DrawText(TextFormat("Vel_x = %d", p1.vel_x), SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10, 50, RAYWHITE);
         PlayerMove();
         CalculateFrame(array);
         DrawFrame(array);
@@ -95,25 +131,21 @@ void ResetUpdateFlags(t_particle **array)
     }
 }
 
-int	ft_convert(int i, int new_min, int new_max, int old_min, int old_max)
-{
-	return ((new_max - new_min) *(i - old_min) / (old_max - old_min) + new_min);
-}
 
 void InitBrush(t_brush *brush, t_particle **array)
 {
     brush->x = GetMouseX();
     brush->y = GetMouseY();
 
-    if (IsKeyPressed(KEY_ONE))
+    if (IsKeyDown(KEY_ONE))
         brush->mat_id = mat_id_sand;
-    else if (IsKeyPressed(KEY_TWO))
+    else if (IsKeyDown(KEY_TWO))
         brush->mat_id = mat_id_water;
-    else if (IsKeyPressed(KEY_THREE))
+    else if (IsKeyDown(KEY_THREE))
         brush->mat_id = mat_id_stone;
-    else if (IsKeyPressed(KEY_FOUR))
+    else if (IsKeyDown(KEY_FOUR))
         brush->mat_id = mat_id_smoke;
-    else if (IsKeyPressed(KEY_FIVE))
+    else if (IsKeyDown(KEY_FIVE))
         brush->mat_id = mat_id_empty;
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -124,8 +156,6 @@ void InitBrush(t_brush *brush, t_particle **array)
             {
                 int x = ft_convert(brush->x + dx, 0, width, 0, SCREEN_WIDTH);
                 int y = ft_convert(brush->y + dy, 0, height, 0, SCREEN_HEIGHT);
-                // int x = brush->x + dx;
-                // int y = brush->y + dy;
                 if (InBounds(y, x) && (dx * dx + dy * dy <= brush->radius * brush->radius))
                     array[y][x].id = brush->mat_id;
             }
@@ -169,7 +199,7 @@ void DrawFrame(t_particle **array)
                     array[y][x].color = mat_col_empty; break;
             }
             //DrawPixel(x, y, array[y][x].color);
-            DrawRectangle(x * scale_w, y *scale_h, scale_w * 2, scale_h * 2, array[y][x].color);
+            DrawRectangle(x * scale_w, y *scale_h, scale_w * 10, scale_h * 10, array[y][x].color);
         }
     }
 }

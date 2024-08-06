@@ -1,15 +1,24 @@
 #include <raylib.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
-#define height 400
-#define width 400
+#define height 200
+#define width 200
 #define SCREEN_HEIGHT 1080
 #define SCREEN_WIDTH 1920
 #define scale_h SCREEN_HEIGHT / height
 #define scale_w SCREEN_WIDTH / width
+
+#define GRAVITY (float)1
+#define ACCELERATION 0.2
+#define FRICTION 0.3f
+#define MAX_VEL 3
+#define JUMP -5
+
+
 // Material IDs
-#define mat_id_p1 (short)-1
+#define mat_id_p1 -1
 #define mat_id_empty 0
 #define mat_id_sand  1
 #define mat_id_water 2
@@ -30,6 +39,17 @@ typedef struct {
     bool updated_this_frame;
 } t_particle;
 
+typedef struct s_player
+{
+    int p_width;
+    int p_height;
+    int x;
+    int y;
+    float   vel_x;
+    float   vel_y;
+    short id;
+} t_player;
+
 typedef struct {
     short radius;
     int x;
@@ -39,7 +59,7 @@ typedef struct {
 
 
 
-int InBounds(int x, int y);
+int InBounds(int y, int x);
 int IsEmpty(int y, int x);
 void UpdateSand(int y, int x);
 void UpdateWater(int y, int x);
